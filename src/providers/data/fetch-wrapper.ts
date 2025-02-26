@@ -27,15 +27,29 @@ const getGraphQlErrors = (body : Record<"errors", GraphQLFormattedError[] | unde
             message : "Error desconocido",
             statusCode : "INTERNAL_SERVER_ERROR"
         }
-    }
+    };
 
     if (body.errors){
         const errors = body?.errors;
         const messages = errors.map((error) => error.message)?.join('\n')
         const code = errors[0]?.extensions?.code
         return {
-            message : messages | JSON.stringify(errors)
+            message : messages || JSON.stringify(errors),
             statusCode : code || 500
         }
+    };
+
+    return null
+}
+
+
+const fetchWrapper = async(url : string, option: RequestInit)=>{
+    const response = await customFetch(url, option)
+    const responseClone = response.clone()
+    const body = await responseClone.json()
+    const errors = getGraphQlErrors(body)
+    if (errors){
+        throw new Error
     }
+    return body
 }
